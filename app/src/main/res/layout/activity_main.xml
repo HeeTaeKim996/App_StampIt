@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.example.stampit.Note
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".MainActivity">
+
+
+    <LinearLayout
+        android:id = "@+id/layout_top"
+        android:layout_width="0dp"
+        android:layout_height="40sp"
+        android:orientation="horizontal"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <Button
+            android:id="@+id/button_exit_note"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="B"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/textView"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="6"
+            android:text="TextView"
+            android:textAppearance="@style/TextAppearance.AppCompat.Large"
+            android:textSize="16sp" />
+
+        <Button
+            android:id="@+id/button_set_read_only"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="R"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/button_add_resource"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="+"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/button_set_othes"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="S"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+    <com.example.stampit.NoteScrollView
+        android:layout_height="0dp"
+        android:layout_width = "0dp"
+        app:layout_constraintBottom_toTopOf="@id/layout_bottom"
+        app:layout_constraintTop_toBottomOf="@id/layout_top"
+        app:layout_constraintStart_toStartOf = "parent"
+        app:layout_constraintEnd_toEndOf = "parent"
+        >
+
+        <LinearLayout
+            android:id = "@+id/scroll_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+
+        >
+
+            <com.example.stampit.Page
+                android:id="@+id/page_temp1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <Button
+                    android:id="@+id/button2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="135dp"
+                    android:layout_marginTop="501dp"
+                    android:text="Button"
+                    app:layout_constraintStart_toEndOf="@+id/button"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <Button
+                    android:id="@+id/button"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="476dp"
+                    android:text="Button"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+            </com.example.stampit.Page>
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:id="@+id/temp_empty"
+                android:layout_width="match_parent"
+                android:layout_height="30dp"
+                android:background="#444444" />
+
+            <com.example.stampit.Page
+                android:id="@+id/page_temp2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                >
+
+            </com.example.stampit.Page>
+
+        </LinearLayout>
+
+
+    </com.example.stampit.NoteScrollView>
+
+    <LinearLayout
+        android:id = "@+id/layout_bottom"
+        android:layout_width="0dp"
+        android:layout_height="46sp"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf = "parent"
+        app:layout_constraintStart_toStartOf = "parent"
+        app:layout_constraintEnd_toEndOf = "parent"
+        >
+
+        <Button
+            android:id="@+id/button_pencil"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="연필" />
+
+        <Button
+            android:id="@+id/button_eraser"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:text="지우개" />
+    </LinearLayout>
+
+
+</com.example.stampit.Note>
+
+
+
