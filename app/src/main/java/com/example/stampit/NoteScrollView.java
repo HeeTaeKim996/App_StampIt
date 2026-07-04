@@ -16,7 +16,9 @@ public class NoteScrollView extends ScrollView
 
     private float lastX;
     private float lastY;
+    private boolean isTwoDown = false;
 
+    private final float scrollScale = 1.2f;
 
     public NoteScrollView(Context context)
     {
@@ -39,57 +41,55 @@ public class NoteScrollView extends ScrollView
     private void init(Context context)
     {
         scaleDetector = new ScaleGestureDetector(context,
-                new ScaleGestureDetector.SimpleOnScaleGestureListener()
+                new ScaleGestureDetector.OnScaleGestureListener()
                 {
+                    @Override
+                    public boolean onScaleBegin(ScaleGestureDetector detector)
+                    {
+                        setPivotX(detector.getFocusX());
+                        setPivotY(detector.getFocusY());
+
+                        lastX = detector.getFocusX();
+                        lastY = detector.getFocusY();
+
+                        isTwoDown = true;
+
+                        return true;
+                    }
+
                     @Override
                     public boolean onScale(ScaleGestureDetector detector)
                     {
-                        // 1. 기존 상태 보존 (s_old, p_old)
-                        float prevScale = scale;
-                        float currPivotX = getPivotX();
-                        float currPivotY = getPivotY();
-
-                        // 2. 새로운 스케일 값 계산 및 제한 (s_new)
                         scale *= detector.getScaleFactor();
-                        scale = Math.max(minScale, Math.min(maxScale, scale));
+                        scale = Math.min(maxScale, Math.max(minScale, scale));
 
-                        // 3. 새로운 피벗 위치 획득 (p_new)
-                        float newPivotX = detector.getFocusX();
-                        float newPivotY = detector.getFocusY();
-
-                        if (prevScale > minScale)
-                        {
-                            // 4. X축 보정: 변환 행렬 일치 공식을 통한 TranslationX 계산
-                            float currTranslationX = getTranslationX();
-                            float nextTranslationX = currTranslationX + (newPivotX - currPivotX) * (prevScale - 1.f);
-                            setTranslationX(nextTranslationX);
-                        }
-
-                        // 5. Y축 보정: 행렬 변환식을 역산한 새로운 ScrollY 목표값 계산 구조화
-                        int currScrollY = getScrollY();
-
-                        // 명확한 매칭을 위해 차기 목표 ScrollY 값을 수식대로 먼저 연산
-                        float nextScrollY = currScrollY
-                                - ((newPivotY - currPivotY) * (prevScale - 1.f));
-
-                        // 이동해야 할 델타값 계산 후 scrollBy 수행
-                        int deltaScrollY = (int) (nextScrollY - currScrollY);
-                        scrollBy(0, deltaScrollY);
-
-
-
-                        // 6. 뷰에 피벗 및 새로운 스케일 최종 적용
-                        setPivotX(newPivotX);
-                        setPivotY(newPivotY);
                         setScaleX(scale);
                         setScaleY(scale);
 
-                        // 7. 경계 한계치 제어
-                        clampTranslation();
+                        float dx = (detector.getFocusX() - lastX) * scrollScale;
+                        float dy = (detector.getFocusY() - lastY) * scrollScale;
 
-                        invalidate();
+                        if(scale > 1.f)
+                        {
+                            setTranslationX(getTranslationX() + dx);
+                        }
+                        scrollBy(0, -(int)dy);
+
+                        lastX = detector.getFocusX();
+                        lastY = detector.getFocusY();
+
+
+                        clampTranslation();
                         return true;
                     }
+
+                    @Override
+                    public void onScaleEnd(ScaleGestureDetector detector)
+                    {
+                        lastX = detector.getFocusX();
+                        lastY = detector.getFocusY();
+                    }
+
                 });
     }
 
@@ -123,8 +123,6 @@ public class NoteScrollView extends ScrollView
 
         if (event.getPointerCount() > 1)
         {
-            lastX = event.getX();
-            lastY = event.getY();
             return true;
         }
 
@@ -139,11 +137,19 @@ public class NoteScrollView extends ScrollView
             case MotionEvent.ACTION_MOVE:
                 if (scale > 1.f)
                 {
-                    float dx = event.getX() - lastX;
-                    float dy = event.getY() - lastY;
+                    if(isTwoDown == true)
+                    {
+                        lastX = event.getX();
+                        lastY = event.getY();
+                        isTwoDown = false;
+                        return true;
+                    }
+
+                    float dx = (event.getX() - lastX) * scrollScale;
+                    float dy = (event.getY() - lastY) * scrollScale;
 
                     // X 는 TranslationX 로 처리
-                    float nextTranslationX = getTranslationX() + dx / scale * 1.3f;
+                    float nextTranslationX = getTranslationX() + dx;
 
 
                     setTranslationX(nextTranslationX);
