@@ -62,7 +62,9 @@ public class Note extends ConstraintLayout
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l)
             {
+                if(adapter == null) return;
 
+                adapter.setCurrTextSize(fontSizes[i]);
             }
 
             @Override

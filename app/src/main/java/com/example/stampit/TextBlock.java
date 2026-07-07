@@ -1,37 +1,42 @@
 package com.example.stampit;
 
 import android.graphics.Bitmap;
+import android.text.TextUtils;
 
 public class TextBlock
 {
-    private String text;
+    private CharSequence text = ""; // Char 하나당 스타일 정보(Span)를 담을 수 있는 CharSequence 사용
     private Bitmap bitmap = null;   // 이미지는 블록당 하나만 사용 가능 (갤럭시 노트가 참조함)
 
-    public TextBlock(String text)
+
+    public TextBlock(CharSequence InSequence)
     {
-        this.text = text;
+        text = InSequence;
     }
 
-    public String getText()
+
+    public CharSequence getText()
     {
         return text;
     }
 
-    public void setText(String text)
+
+    public void setText(CharSequence InSequence)
     {
-        this.text = text;
+        text = InSequence;
     }
 
-    public void addText(String addedText)
+
+    public void addText(CharSequence addedText)
     {
-        text = text + addedText;
+        text = TextUtils.concat(text, addedText);
     }
 
-    public String removeTextFromSel(int sel)
+    public CharSequence removeTextFromSel(int sel)
     {
-        String newString = text.substring(sel, text.length());
-        text = text.substring(0, sel);
-        return newString;
+        CharSequence newSequence = text.subSequence(sel, text.length());
+        text = text.subSequence(0, sel);
+        return newSequence;
     }
 
 
