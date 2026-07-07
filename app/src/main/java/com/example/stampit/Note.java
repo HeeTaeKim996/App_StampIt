@@ -1,9 +1,9 @@
 package com.example.stampit;
 
 import android.content.Context;
-import android.os.Bundle;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
-import android.view.View;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -38,5 +38,18 @@ public class Note extends ConstraintLayout
 
         EditorAdapter adapter = new EditorAdapter(data);
         recyclerView.setAdapter(adapter);
+
+        findViewById(R.id.button_add_resource).setOnClickListener(v->
+        {
+            Bitmap tempBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.imgflag8);
+            adapter.InsertImage(tempBitmap);
+        });
     }
+
+
+
+
+
+
+
 }
