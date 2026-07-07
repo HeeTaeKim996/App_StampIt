@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<com.example.stampit.Note
+<merge
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -59,67 +59,18 @@
             android:textSize="12sp" />
     </LinearLayout>
 
-    <com.example.stampit.NoteScrollView
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_width = "0dp"
-        app:layout_constraintBottom_toTopOf="@id/layout_bottom"
         app:layout_constraintTop_toBottomOf="@id/layout_top"
-        app:layout_constraintStart_toStartOf = "parent"
-        app:layout_constraintEnd_toEndOf = "parent"
-        >
+        app:layout_constraintBottom_toTopOf="@id/layout_bottom"
+        android:orientation="vertical">
 
-        <LinearLayout
-            android:id = "@+id/scroll_layout"
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycleView"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-
-        >
-
-            <com.example.stampit.Page
-                android:id="@+id/page_temp1"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content">
-
-                <Button
-                    android:id="@+id/button2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="135dp"
-                    android:layout_marginTop="501dp"
-                    android:text="Button"
-                    app:layout_constraintStart_toEndOf="@+id/button"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <Button
-                    android:id="@+id/button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="476dp"
-                    android:text="Button"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </com.example.stampit.Page>
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/temp_empty"
-                android:layout_width="match_parent"
-                android:layout_height="30dp"
-                android:background="#444444" />
-
-            <com.example.stampit.Page
-                android:id="@+id/page_temp2"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                >
-
-            </com.example.stampit.Page>
-
-        </LinearLayout>
-
-
-    </com.example.stampit.NoteScrollView>
+            android:layout_height="match_parent" />
+    </LinearLayout>
 
     <LinearLayout
         android:id = "@+id/layout_bottom"
@@ -147,7 +98,7 @@
     </LinearLayout>
 
 
-</com.example.stampit.Note>
+</merge>
 
 
 

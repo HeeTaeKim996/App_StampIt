@@ -6,11 +6,13 @@ import android.os.Bundle;
 
 public class MainActivity extends AppCompatActivity
 {
-
+    Note note;
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        note = new Note(this);
+        setContentView(note.getRootView());
     }
 }

@@ -7,7 +7,7 @@ import android.view.ScaleGestureDetector;
 import android.widget.ScrollView;
 
 
-public class NoteScrollView extends ScrollView
+public class Deprecated_NoteScrollView extends ScrollView
 {
     private ScaleGestureDetector scaleDetector;
     private float scale = 1.f;
@@ -20,19 +20,19 @@ public class NoteScrollView extends ScrollView
 
     private final float scrollScale = 1.2f;
 
-    public NoteScrollView(Context context)
+    public Deprecated_NoteScrollView(Context context)
     {
         super(context);
         init(context);
     }
 
-    public NoteScrollView(Context context, AttributeSet attrs)
+    public Deprecated_NoteScrollView(Context context, AttributeSet attrs)
     {
         super(context, attrs);
         init(context);
     }
 
-    public NoteScrollView(Context context, AttributeSet attrs, int defStyleAttr)
+    public Deprecated_NoteScrollView(Context context, AttributeSet attrs, int defStyleAttr)
     {
         super(context, attrs, defStyleAttr);
         init(context);
@@ -46,8 +46,20 @@ public class NoteScrollView extends ScrollView
                     @Override
                     public boolean onScaleBegin(ScaleGestureDetector detector)
                     {
+                        float prePivotX = getPivotX();
+                        float prePivotY = getPivotY();
+
                         setPivotX(detector.getFocusX());
                         setPivotY(detector.getFocusY());
+
+
+                        float newTranslationX = getTranslationX()
+                                + (prePivotX - getPivotX()) * (1 - getScaleX());
+                        float newTranslationY = getTranslationY()
+                                + (prePivotY - getPivotY()) * (1 - getScaleY());
+
+                        setTranslationX(newTranslationX);
+                        setTranslationY(newTranslationY);
 
                         lastX = detector.getFocusX();
                         lastY = detector.getFocusY();
@@ -60,20 +72,22 @@ public class NoteScrollView extends ScrollView
                     @Override
                     public boolean onScale(ScaleGestureDetector detector)
                     {
+
                         scale *= detector.getScaleFactor();
                         scale = Math.min(maxScale, Math.max(minScale, scale));
 
                         setScaleX(scale);
                         setScaleY(scale);
 
+
                         float dx = (detector.getFocusX() - lastX) * scrollScale;
                         float dy = (detector.getFocusY() - lastY) * scrollScale;
 
-                        if(scale > 1.f)
+                        if (scale > 1.f)
                         {
                             setTranslationX(getTranslationX() + dx);
                         }
-                        scrollBy(0, -(int)dy);
+                        scrollBy(0, -(int) dy);
 
                         lastX = detector.getFocusX();
                         lastY = detector.getFocusY();
@@ -86,8 +100,8 @@ public class NoteScrollView extends ScrollView
                     @Override
                     public void onScaleEnd(ScaleGestureDetector detector)
                     {
-                        lastX = detector.getFocusX();
-                        lastY = detector.getFocusY();
+                        // isTopDown = false 여기서 처리 안함. 원인은 모르지만 타이밍이 어긋났음
+                        // 아래서 MotionEVent.MOVE 에서 처리
                     }
 
                 });
@@ -103,11 +117,7 @@ public class NoteScrollView extends ScrollView
             return true;
         }
 
-        // 임시로 처리. 이게 맞나 모르겠다.
-        if (scale > 1.f)
-        {
-            return true;
-        }
+
 
 
         return super.onInterceptTouchEvent(ev);
@@ -134,10 +144,23 @@ public class NoteScrollView extends ScrollView
                 lastY = event.getY();
                 break;
 
+            case MotionEvent.ACTION_POINTER_DOWN:
+                lastX = event.getX();
+                lastY = event.getY();
+                break;
+
+            case MotionEvent.ACTION_POINTER_UP:
+                int exileIndex = event.getActionIndex();
+                int activeIndex = exileIndex == 0 ? 1 : 0;
+                lastX = event.getX(activeIndex);
+                lastY = event.getY(activeIndex);
+                break;
+
+
             case MotionEvent.ACTION_MOVE:
                 if (scale > 1.f)
                 {
-                    if(isTwoDown == true)
+                    if (isTwoDown == true)
                     {
                         lastX = event.getX();
                         lastY = event.getY();
@@ -198,11 +221,10 @@ public class NoteScrollView extends ScrollView
         float maxTranslationX = px * scaleMinOne;
 
         float currTx = getTranslationX();
-        if(currTx > maxTranslationX)
+        if (currTx > maxTranslationX)
         {
             setTranslationX(maxTranslationX);
-        }
-        else if(currTx < minTranslationX)
+        } else if (currTx < minTranslationX)
         {
             setTranslationX(minTranslationX);
         }
