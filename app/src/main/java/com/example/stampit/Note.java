@@ -4,6 +4,10 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
+import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -44,6 +48,30 @@ public class Note extends ConstraintLayout
             Bitmap tempBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.imgflag8);
             adapter.InsertImage(tempBitmap);
         });
+
+
+        Integer[] fontSizes = {7, 17, 27};
+        ArrayAdapter<Integer> spinnerAdapter = new ArrayAdapter<Integer>(context,
+                android.R.layout.simple_list_item_1, fontSizes);
+        spinnerAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
+        Spinner textSizeSpinner = findViewById(R.id.spinner_textSize);
+        textSizeSpinner.setAdapter(spinnerAdapter);
+        textSizeSpinner.setSelection(1);
+        textSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l)
+            {
+
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView)
+            {
+
+            }
+        });
+
     }
 
 

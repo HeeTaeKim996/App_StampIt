@@ -23,11 +23,27 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
     private int focusPosition = -1;
     private int nextFocusSelection = -1;
     private boolean isTextChangeHandling = false;
+    private RecyclerView attachedRecyclerView;
 
     public EditorAdapter(List<TextBlock> items)
     {
         this.items = items;
     }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView)
+    {
+        super.onAttachedToRecyclerView(recyclerView);
+        attachedRecyclerView = recyclerView;
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView)
+    {
+        super.onDetachedFromRecyclerView(recyclerView);
+        attachedRecyclerView = null;
+    }
+
 
     @NonNull
     @Override
@@ -131,6 +147,8 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
 
             notifyItemInserted(focusPosition);
             notifyItemChanged(beforePos);
+
+            attachedRecyclerView.scrollToPosition(focusPosition);
         }
     }
 
@@ -169,7 +187,7 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                 {
                     changingBlock.setBitmap(null);
                 }
-                // 이미지가 있는데, 이미지 옆에 텍스트 입력을 시했기에, 차단.
+                // 이미지가 있는데, 이미지 옆에 텍스트 입력을 시했기에, 다음 블록으로 이전
                 else
                 {
                     String newText = editable.toString().substring(1, editable.length());
@@ -186,6 +204,7 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                     nextFocusSelection = newText.length();
 
                     notifyItemInserted(focusPosition);
+                    attachedRecyclerView.scrollToPosition(focusPosition);
 
                     return;
                 }
@@ -252,6 +271,10 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                             nextFocusSelection = 0;
 
                             notifyItemInserted(nextPos);
+
+                            RecyclerView recyclerView = (RecyclerView) view.getParent();
+                            recyclerView.scrollToPosition(nextPos);
+
                             return true;
                         }
                     }
