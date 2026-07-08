@@ -25,6 +25,8 @@ public class Note extends ConstraintLayout
     public Note(Context context, AttributeSet attrs, int defStyleAttr)
     {super(context, attrs, defStyleAttr);   init(context);}
 
+    Integer[] fontSizes = {7, 17, 27};
+    private boolean isCursorSelection = false;
 
     private void init(Context context)
     {
@@ -50,7 +52,7 @@ public class Note extends ConstraintLayout
         });
 
 
-        Integer[] fontSizes = {7, 17, 27};
+
         ArrayAdapter<Integer> spinnerAdapter = new ArrayAdapter<Integer>(context,
                 android.R.layout.simple_list_item_1, fontSizes);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
@@ -64,6 +66,11 @@ public class Note extends ConstraintLayout
             {
                 if(adapter == null) return;
 
+                if(isCursorSelection)
+                {
+                    isCursorSelection = false;
+                    return;
+                }
                 adapter.setCurrTextSize(fontSizes[i]);
             }
 
@@ -77,7 +84,23 @@ public class Note extends ConstraintLayout
     }
 
 
+    public void setTextSizeSpinner(Integer textSize)
+    {
+        for(int i = 0; i < fontSizes.length; i++)
+        {
+            if(fontSizes[i] == textSize)
+            {
+                Spinner spinner = findViewById(R.id.spinner_textSize);
+                if(spinner.getSelectedItemPosition() != i)
+                {
+                    isCursorSelection = true;
+                    spinner.setSelection(i);
+                }
 
+                return;
+            }
+        }
+    }
 
 
 

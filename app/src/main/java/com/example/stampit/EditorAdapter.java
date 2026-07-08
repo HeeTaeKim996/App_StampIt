@@ -26,7 +26,7 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
     private int nextFocusSelection = -1;
     private boolean isTextChangeHandling = false;
     private RecyclerView attachedRecyclerView;
-    private int currTextSize = 17;
+
 
     public EditorAdapter(List<TextBlock> items)
     {
@@ -54,7 +54,9 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
     {
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_text_block, parent, false);
-        return new ViewHolder(view, new CustomTextWatcher());
+        ViewHolder holder = new ViewHolder(view, new CustomTextWatcher());
+
+        return holder;
     }
 
     @Override
@@ -134,7 +136,6 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
         if(currItem.getText().length() == 0)
         {
             currItem.setBitmap(bitmap);
-            currItem.setText("");
             notifyItemChanged(focusPosition);
         }
         else
@@ -162,7 +163,6 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
     private class CustomTextWatcher implements TextWatcher
     {
         private int position;
-        private int beforeLength = 0;
 
         public void updatePosition(int position)
         {
@@ -172,44 +172,13 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
         @Override
         public void beforeTextChanged(CharSequence s, int start, int count, int after)
         {
-            beforeLength = s.length();
-            // 적용되기 전의 글자 수를 저장. 현재는 beforeLength를 사용 안하지만,
-            // 추후 글자수 제한 때 초과시 beforeLength 까지만으로 자르거나,
-            // beforeLength < 현재 길이 로 글자 추가, beforeLength > 현재 길이 로 글자 삭제 판별 등에 사용
+
         }
 
         @Override
         public void onTextChanged(CharSequence s, int start, int before, int count)
         {
-            if(count > 0 && s instanceof Spannable)
-            {
-                Spannable spannable = (Spannable)s;
 
-                if(start > 0)
-                {
-                    AbsoluteSizeSpan[] existingSpans = spannable.getSpans(start - 1, start,
-                            AbsoluteSizeSpan.class);
-                    boolean merged = false;
-                    for(AbsoluteSizeSpan span : existingSpans)
-                    {
-                        if(span == s)
-                        {
-                            merged = true;
-                            break;
-                        }
-                    }
-                    if(merged)
-                    {
-                        return;
-                    }
-                }
-
-                spannable.setSpan(new AbsoluteSizeSpan(currTextSize, true),
-                        start, start + count, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
-                // 어차피 매번 글자가 입력되기에 SPAN_EXCLUSIVE_EXCLUSIVE 로 해도 글자 사이즈 적용은 되지만,
-                // EXCLUSIVE_INCLUSIVE 를 하면 뒤에 글자가 입력될 때 기존 글자와 같은 SPAN 으로 묶여 SPAN
-                // 관리가 수월하다 함. EXCLUSIVE_EXCLUSIVE 로 하면 동일한 스팬들이 인접해도 각각의 스팬으로 생성
-            }
         }
 
         @Override
@@ -249,10 +218,9 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                 }
             }
 
-            if(changingBlock.getText() != editable)
-            {
-                items.get(position).setText(editable);
-            }
+
+            items.get(position).setText(editable);
+
         }
     }
 
@@ -277,7 +245,7 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
 
     public class ViewHolder extends RecyclerView.ViewHolder
     {
-        private EditText editText;
+        private CursorNotifyEditText editText;
         private CustomTextWatcher textWatcher;
 
         public ViewHolder(@NonNull View itemView, CustomTextWatcher watcher)
@@ -287,6 +255,49 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
             textWatcher = watcher;
 
 
+            editText.setOnSelectionChangedListener(new CursorNotifyEditText.OnSelectionChangedListener()
+            {
+                @Override
+                public void onSelectionChanged(int selStart, int selEnd)
+                {
+                    if(selStart == selEnd)
+                    {
+                        View linearParent = (View) attachedRecyclerView.getParent();
+                        if(linearParent != null)
+                        {
+                            Note rootNote = (Note) linearParent.getParent();
+                            if(rootNote != null)
+                            {
+                                Editable editable = editText.getText();
+                                if(selStart > 0)
+                                {
+                                    AbsoluteSizeSpan[] spans = ((Spannable) editable)
+                                            .getSpans(selStart - 1, selStart,
+                                                    AbsoluteSizeSpan.class);
+                                    if(spans != null && spans.length > 0)
+                                    {
+                                        rootNote.setTextSizeSpinner(spans[0].getSize());
+                                        return;
+                                    }
+                                }
+                                else
+                                {
+                                    AbsoluteSizeSpan[] spans = ((Spannable) editable)
+                                            .getSpans(0, 0, AbsoluteSizeSpan.class);
+                                    if(spans != null && spans.length > 0)
+                                    {
+                                        rootNote.setTextSizeSpinner(spans[0].getSize());
+                                        return;
+                                    }
+
+                                }
+
+                                rootNote.setTextSizeSpinner(17);
+                            }
+                        }
+                    }
+                }
+            });
 
             editText.setOnKeyListener(new View.OnKeyListener()
             {
@@ -352,7 +363,6 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
 
     public void setCurrTextSize(int newSize)
     {
-        currTextSize = newSize;
 
         if(focusPosition != -1 && attachedRecyclerView != null)
         {
@@ -377,11 +387,22 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                     }
                     spannable.setSpan(new AbsoluteSizeSpan(newSize, true) ,
                             // dip(true) 일시, 사이즈의 단위는 dp. false 일시, 사이즈의 단위는 pixel
-                            start, end, Spannable.SPAN_EXCLUSIVE_EXCLUSIVE);
+                            start, end, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
                     // SPAN_EXCLUSIVE_EXCLUSIVE : start, end 인근에 텍스트가 추가돼도, 스팬을 적용 안함
                     // SPAN_INCLUSIVE_INCLUSIVE : start 앞에 텍스트가 추가되면, 스팬 적용. 뒤는 적용 안함
                     // SPAN_EXCLUSIVE_INCLUSIVE : end 뒤에 텍스트가 추가되면, 스팬 적용. 앞은 적용 안함
                     // SPAN_INCLUSIVE_INCLUSIVE : start, end 인근에 텍스트가 추가되면, 모두 스팬 적용
+                }
+                else
+                {
+                    Spannable spannable = et.getText();
+                    AbsoluteSizeSpan[] oldSpans = spannable.getSpans(start, start,
+                            AbsoluteSizeSpan.class);
+                    for (AbsoluteSizeSpan span : oldSpans) {
+                        spannable.removeSpan(span);
+                    }
+                    et.getText().setSpan(new AbsoluteSizeSpan(newSize, true),
+                            start, start, Spannable.SPAN_INCLUSIVE_INCLUSIVE);
                 }
             }
         }
