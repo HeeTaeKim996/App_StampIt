@@ -6,6 +6,7 @@ import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
 import android.text.style.AbsoluteSizeSpan;
+import android.text.style.ForegroundColorSpan;
 import android.text.style.ImageSpan;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -15,6 +16,8 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import org.w3c.dom.Text;
 
 import java.util.List;
 
@@ -26,7 +29,7 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
     private boolean isTextChangeOnTextWatcher = false;
     private RecyclerView attachedRecyclerView;
 
-    private TextFormat currTextFormat = new TextFormat.Builder().setSize(1).create();
+    private TextFormat currTextFormat = new TextFormat();
     private TextFormat nextTextFormat = null;
 
 
@@ -418,8 +421,7 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                 if(start != end)
                 {
                     Spannable spannable = et.getText();
-                    setTextsToOtherFormat(spannable, start, end,
-                            new TextFormat.Builder().setSize(newFormat.sizeIndex).create());
+                    setTextsToOtherFormat(spannable, start, end, newFormat);
                 }
                 else
                 {
@@ -441,25 +443,36 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
 
     private void setTextsToOtherFormat(Spannable spannable, int start, int end, TextFormat newFormat)
     {
-        // Set Size
-        AbsoluteSizeSpan[] oldSpans = spannable.getSpans(start, end, AbsoluteSizeSpan.class);
-        // (3) : 가져오고자 하는 스팬의 타입 지정. Ex) AbsoluteSizeSpan, BackgroundColorSpan..
-        for(AbsoluteSizeSpan span : oldSpans)
-        {
-            spannable.removeSpan(span);
-        }
+        removeAllSpanInWidth(spannable, start, end, AbsoluteSizeSpan.class);
         spannable.setSpan(new AbsoluteSizeSpan(TextFormat.textSize[newFormat.sizeIndex], true),
                 // dip(true) 일시, 사이즈의 단위는 dp. false 일시, 사이즈의 단위는 pixel
                 start, end, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+
+        removeAllSpanInWidth(spannable, start, end, ForegroundColorSpan.class);
+        spannable.setSpan(new ForegroundColorSpan(TextFormat.colorValue[newFormat.colorIndex]),
+                start, end, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+        // TODO : 서식에 다른 요소들 추가되면, 추가 처리
+
+
+
         // SPAN_EXCLUSIVE_EXCLUSIVE : start, end 인근에 텍스트가 추가돼도, 스팬을 적용 안함
         // SPAN_INCLUSIVE_INCLUSIVE : start 앞에 텍스트가 추가되면, 스팬 적용. 뒤는 적용 안함
         // SPAN_EXCLUSIVE_INCLUSIVE : end 뒤에 텍스트가 추가되면, 스팬 적용. 앞은 적용 안함
         // SPAN_INCLUSIVE_INCLUSIVE : start, end 인근에 텍스트가 추가되면, 모두 스팬 적용
     }
+    private <T> void removeAllSpanInWidth(Spannable spannable, int start, int end, Class<T> t)
+    {
+        T[] spans = spannable.getSpans(start, end, t);
+        for(T span : spans)
+        {
+            spannable.removeSpan(span);
+        }
+    }
 
     private void setEditTextToCurrFormat(EditText et)
     {
-        et.setTextSize(currTextFormat.textSize[currTextFormat.sizeIndex]);
+        et.setTextSize(TextFormat.textSize[currTextFormat.sizeIndex]);
+        et.setTextColor(TextFormat.colorValue[currTextFormat.colorIndex]);
         // TODO : 서식에 다른 요소들 추가되면, 추가 처리
     }
 
@@ -481,27 +494,19 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
 
         isTextChangeOnTextWatcher = true;
 
-        AbsoluteSizeSpan[] oldspans = editable.getSpans(insertPos, currCursor,
-                AbsoluteSizeSpan.class);
-        for(AbsoluteSizeSpan span : oldspans)
-        {
-            int spanStart = editable.getSpanStart(span);
 
-            // 기존 스팬 삭제
-            editable.removeSpan(span);
 
-            // 범위 끝점을 insertPos 로 줄여, 다시 스팬 추가
-            if(spanStart < insertPos)
-            {
-                editable.setSpan(span, spanStart, insertPos,
-                        Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
-            }
-        }
+
+        trimAndReapplySpan(editable, insertPos, currCursor, AbsoluteSizeSpan.class);
+        trimAndReapplySpan(editable, insertPos, currCursor, ForegroundColorSpan.class);
         // TODO : 서식에 다른 요소들 추가되면, Truncate 추가 처리
+
 
 
         editable.setSpan(new AbsoluteSizeSpan(
                 TextFormat.textSize[nextTextFormat.sizeIndex], true),
+                insertPos, currCursor, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+        editable.setSpan(new ForegroundColorSpan(TextFormat.colorValue[nextTextFormat.colorIndex]),
                 insertPos, currCursor, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
         // TODO : 서식에 다른 요소들 추가되면, 추가 처리
 
@@ -510,6 +515,23 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
         nextTextFormat = null;
 
         isTextChangeOnTextWatcher = false;
+    }
+
+    private <T> void trimAndReapplySpan(Editable editable, int insertPos, int currCursor,
+                                        Class<T> spanClass)
+    {
+        T[] oldSpans = editable.getSpans(insertPos, currCursor, spanClass);
+        for(T span : oldSpans)
+        {
+            int spanStart = editable.getSpanStart(span);
+
+            editable.removeSpan(span);
+
+            if(spanStart < insertPos)
+            {
+                editable.setSpan(span, spanStart, insertPos, Spannable.SPAN_EXCLUSIVE_INCLUSIVE);
+            }
+        }
     }
 
     public interface OnTextFormatChangedListener
@@ -532,14 +554,17 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
         boolean hasSpan = false;
         boolean changed = false;
 
+
+
+
         Editable editable = editText.getText();
         Spannable spannable = editable;
-        AbsoluteSizeSpan[] spans = spannable.getSpans(cursorPos - 1, cursorPos,
+        AbsoluteSizeSpan[] sizeSpans = spannable.getSpans(cursorPos - 1, cursorPos,
                 AbsoluteSizeSpan.class);
-        if(spans != null && spans.length > 0)
+        if(sizeSpans != null && sizeSpans.length > 0)
         {
             hasSpan = true;
-            int textSize = spans[0].getSize();
+            int textSize = sizeSpans[0].getSize();
             if(TextFormat.textSize[currTextFormat.sizeIndex] != textSize)
             {
                 for(int i = 0; i < TextFormat.textSize.length; i++)
@@ -547,6 +572,25 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                     if(TextFormat.textSize[i] == textSize)
                     {
                         currTextFormat.sizeIndex = i;
+                        changed = true;
+                        break;
+                    }
+                }
+            }
+        }
+        ForegroundColorSpan[] colorSpans = spannable.getSpans(cursorPos - 1, cursorPos,
+                ForegroundColorSpan.class);
+        if(colorSpans != null && colorSpans.length > 0)
+        {
+            hasSpan = true;
+            int colorValue = colorSpans[0].getForegroundColor();
+            if(TextFormat.colorValue[currTextFormat.colorIndex] != colorValue)
+            {
+                for(int i = 0; i < TextFormat.colorValue.length; i++)
+                {
+                    if(TextFormat.colorValue[i] == colorValue)
+                    {
+                        currTextFormat.colorIndex = i;
                         changed = true;
                         break;
                     }
@@ -579,6 +623,19 @@ public class EditorAdapter extends RecyclerView.Adapter<EditorAdapter.ViewHolder
                 }
             }
 
+            int colorValue = editText.getCurrentTextColor();
+            if(TextFormat.colorValue[currTextFormat.colorIndex] != colorValue)
+            {
+                for(int i = 0; i < TextFormat.colorValue.length; i++)
+                {
+                    if(TextFormat.colorValue[i] == colorValue)
+                    {
+                        currTextFormat.colorIndex = i;
+                        changed = true;
+                        break;
+                    }
+                }
+            }
             // TODO : 서식에 다른 요소들 추가되면, editText에서 다른 요소 추출
         }
 

@@ -4,6 +4,7 @@ import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -13,30 +14,25 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.stampit.databinding.ActivityMainBinding;
+
 import java.util.ArrayList;
 import java.util.List;
 
-public class Note extends ConstraintLayout
+public class Note
 {
-    public Note(Context context)
-    {super(context);                        init(context);}
-    public Note(Context context, AttributeSet attrs)
-    {super(context, attrs);                 init(context);}
-    public Note(Context context, AttributeSet attrs, int defStyleAttr)
-    {super(context, attrs, defStyleAttr);   init(context);}
-
+    private ActivityMainBinding mainBinding;
 
     private TextFormat currFormat;
     private boolean isCursorSelection = false;
 
-    private void init(Context context)
+    public Note(Context context)
     {
-        inflate(context, R.layout.activity_main, this);
+        mainBinding = ActivityMainBinding.inflate(LayoutInflater.from(context));
 
-        currFormat = new TextFormat.Builder().setSize(1).create();
+        currFormat = new TextFormat();
 
-        RecyclerView recyclerView = findViewById(R.id.recycleView);
-        recyclerView.setLayoutManager(new LinearLayoutManager(context));
+        mainBinding.recycleView.setLayoutManager(new LinearLayoutManager(context));
 
         int initSize = 10;
         List<TextBlock> data = new ArrayList<TextBlock>(initSize);
@@ -46,11 +42,11 @@ public class Note extends ConstraintLayout
         }
 
         EditorAdapter adapter = new EditorAdapter(data);
-        recyclerView.setAdapter(adapter);
+        mainBinding.recycleView.setAdapter(adapter);
 
-        findViewById(R.id.button_add_resource).setOnClickListener(v->
+        mainBinding.buttonAddResource.setOnClickListener(v->
         {
-            Bitmap tempBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.imgflag8);
+            Bitmap tempBitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.imgflag8);
             adapter.InsertImage(tempBitmap);
         });
         adapter.setOnTextFormatChangedListener(new EditorAdapter.OnTextFormatChangedListener()
@@ -68,21 +64,16 @@ public class Note extends ConstraintLayout
         ArrayAdapter<Integer> spinnerAdapter = new ArrayAdapter<Integer>(context,
                 android.R.layout.simple_list_item_1, TextFormat.textSize);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
-        Spinner textSizeSpinner = findViewById(R.id.spinner_textSize);
-        textSizeSpinner.setAdapter(spinnerAdapter);
-        textSizeSpinner.setSelection(1);
-        textSizeSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+
+        mainBinding.spinnerTextSize.setAdapter(spinnerAdapter);
+        mainBinding.spinnerTextSize.setSelection(1);
+        mainBinding.spinnerTextSize.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
         {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l)
             {
                 if(adapter == null) return;
-
-                if(isCursorSelection)
-                {
-                    isCursorSelection = false;
-                    return;
-                }
+                if(isCursorSelection) return;
 
                 if(i == currFormat.sizeIndex) return;
 
@@ -91,12 +82,33 @@ public class Note extends ConstraintLayout
             }
 
             @Override
-            public void onNothingSelected(AdapterView<?> adapterView)
-            {
-
-            }
+            public void onNothingSelected(AdapterView<?> adapterView) { }
         });
 
+
+        ArrayAdapter<Integer> colorAdapter = new ArrayAdapter<>(context,
+                android.R.layout.simple_list_item_1, TextFormat.colorValue);
+        colorAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
+
+        mainBinding.spinnerColorValue.setAdapter(colorAdapter);
+        mainBinding.spinnerColorValue.setSelection(0);
+        mainBinding.spinnerColorValue.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener()
+        {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l)
+            {
+                if(adapter == null) return;
+                if(isCursorSelection) return;
+
+                if(i == currFormat.colorIndex) return;
+
+                currFormat.colorIndex = i;
+                adapter.ChangeTextFormat(currFormat);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {}
+        });
     }
 
     public void OnTextFormatChanged(TextFormat newFormat)
@@ -104,19 +116,27 @@ public class Note extends ConstraintLayout
         if(currFormat.equals(newFormat)) return;
 
         currFormat = newFormat;
-
         isCursorSelection = true;
-        Spinner spinner = findViewById(R.id.spinner_textSize);
-        if(spinner.getSelectedItemPosition() != currFormat.sizeIndex)
+
+        if(mainBinding.spinnerTextSize.getSelectedItemPosition() != currFormat.sizeIndex)
         {
-            isCursorSelection = true;
-            spinner.setSelection(currFormat.sizeIndex);
+            mainBinding.spinnerTextSize.setSelection(currFormat.sizeIndex);
+        }
+
+        if(mainBinding.spinnerColorValue.getSelectedItemPosition() != currFormat.colorIndex)
+        {
+            mainBinding.spinnerColorValue.setSelection(currFormat.colorIndex);
         }
 
         // TODO : 다른 인자들 처리
+
+        isCursorSelection = false;
     }
 
-
+    public View GetRootView()
+    {
+        return mainBinding.getRoot();
+    }
 
 
 

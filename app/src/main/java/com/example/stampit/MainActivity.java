@@ -13,6 +13,6 @@ public class MainActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
 
         note = new Note(this);
-        setContentView(note.getRootView());
+        setContentView(note.GetRootView());
     }
 }
