@@ -25,12 +25,15 @@ public class Note extends ConstraintLayout
     public Note(Context context, AttributeSet attrs, int defStyleAttr)
     {super(context, attrs, defStyleAttr);   init(context);}
 
-    Integer[] fontSizes = {7, 17, 27};
+
+    private TextFormat currFormat;
     private boolean isCursorSelection = false;
 
     private void init(Context context)
     {
         inflate(context, R.layout.activity_main, this);
+
+        currFormat = new TextFormat.Builder().setSize(1).create();
 
         RecyclerView recyclerView = findViewById(R.id.recycleView);
         recyclerView.setLayoutManager(new LinearLayoutManager(context));
@@ -50,11 +53,20 @@ public class Note extends ConstraintLayout
             Bitmap tempBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.imgflag8);
             adapter.InsertImage(tempBitmap);
         });
+        adapter.setOnTextFormatChangedListener(new EditorAdapter.OnTextFormatChangedListener()
+        {
+            @Override
+            public void onTextFormatChanged(TextFormat textFormat)
+            {
+                OnTextFormatChanged(textFormat);
+            }
+        });
+
 
 
 
         ArrayAdapter<Integer> spinnerAdapter = new ArrayAdapter<Integer>(context,
-                android.R.layout.simple_list_item_1, fontSizes);
+                android.R.layout.simple_list_item_1, TextFormat.textSize);
         spinnerAdapter.setDropDownViewResource(android.R.layout.simple_dropdown_item_1line);
         Spinner textSizeSpinner = findViewById(R.id.spinner_textSize);
         textSizeSpinner.setAdapter(spinnerAdapter);
@@ -71,7 +83,11 @@ public class Note extends ConstraintLayout
                     isCursorSelection = false;
                     return;
                 }
-                adapter.setCurrTextSize(fontSizes[i]);
+
+                if(i == currFormat.sizeIndex) return;
+
+                currFormat.sizeIndex = i;
+                adapter.ChangeTextFormat(currFormat);
             }
 
             @Override
@@ -83,24 +99,23 @@ public class Note extends ConstraintLayout
 
     }
 
-
-    public void setTextSizeSpinner(Integer textSize)
+    public void OnTextFormatChanged(TextFormat newFormat)
     {
-        for(int i = 0; i < fontSizes.length; i++)
-        {
-            if(fontSizes[i] == textSize)
-            {
-                Spinner spinner = findViewById(R.id.spinner_textSize);
-                if(spinner.getSelectedItemPosition() != i)
-                {
-                    isCursorSelection = true;
-                    spinner.setSelection(i);
-                }
+        if(currFormat.equals(newFormat)) return;
 
-                return;
-            }
+        currFormat = newFormat;
+
+        isCursorSelection = true;
+        Spinner spinner = findViewById(R.id.spinner_textSize);
+        if(spinner.getSelectedItemPosition() != currFormat.sizeIndex)
+        {
+            isCursorSelection = true;
+            spinner.setSelection(currFormat.sizeIndex);
         }
+
+        // TODO : 다른 인자들 처리
     }
+
 
 
 
